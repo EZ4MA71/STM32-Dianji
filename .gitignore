@@ -1,0 +1,12 @@
+MDK-ARM/Objects/
+MDK-ARM/Listings/
+MDK-ARM/*.uvguix.*
+MDK-ARM/*.uvgui.*
+MDK-ARM/*.uvprojx.bak
+MDK-ARM/*.uvoptx.bak
+MDK-ARM/*.lst
+*.bak
+*.crf
+*.dep
+*.d
+__pycache__/

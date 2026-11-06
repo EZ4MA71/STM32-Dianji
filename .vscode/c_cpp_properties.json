@@ -1,0 +1,20 @@
+{
+  "configurations": [
+    {
+      "name": "STM32H743 - Keil Arm Compiler 6",
+      "compilerPath": "D:/work/keil_v5/ARM/ARMCLANG/bin/armclang.exe",
+      "compilerArgs": ["--target=arm-arm-none-eabi", "-mcpu=cortex-m7", "-mfpu=fpv5-d16", "-mfloat-abi=hard"],
+      "intelliSenseMode": "windows-clang-arm",
+      "cStandard": "c11",
+      "cppStandard": "c++14",
+      "includePath": [
+        "${workspaceFolder}/Core/Inc",
+        "${workspaceFolder}/Drivers/CMSIS/Include",
+        "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32H7xx/Include",
+        "${workspaceFolder}/Drivers/STM32H7xx_HAL_Driver/Inc"
+      ],
+      "defines": ["STM32H743xx", "USE_HAL_DRIVER", "USE_PWR_LDO_SUPPLY", "USER_VECT_TAB_ADDRESS", "__MICROLIB"]
+    }
+  ],
+  "version": 4
+}
