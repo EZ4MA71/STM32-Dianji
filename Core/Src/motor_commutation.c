@@ -86,7 +86,7 @@ static MotorControl motor =
 /* 本函数不等待转子停下，只撤销驱动控制。 */
 static void HardwareOff(void)
 {
-    /* 步骤 1：PA3 驱动使能与 PA5 下桥一起拉低。BSRR 高 16 位表示复位引脚。 */
+    /* 步骤 1：PA3 驱动使能与 PA8 下桥一起拉低。BSRR 高 16 位表示复位引脚。 */
     if (__HAL_RCC_GPIOA_IS_CLK_ENABLED())
     {
         GPIOA->BSRR =
@@ -227,7 +227,7 @@ static void SetUpperDuty(uint8_t phase, uint16_t permille)
  */
 static void LowerOn(uint8_t phase)
 {
-    /* U 下桥 PA5；V 下桥 PB14；W 下桥 PB15。 */
+    /* U 下桥 PA8，V 下桥 PB14，W 下桥 PB15。 */
     switch (phase)
     {
         case PHASE_U:

@@ -11,7 +11,7 @@
 
 /* 下桥臂：按 H_PWM-L_ON 方式使用普通 GPIO */
 #define MOTOR_UL_PORT        GPIOA
-#define MOTOR_UL_PIN         GPIO_PIN_5
+#define MOTOR_UL_PIN         GPIO_PIN_8
 
 #define MOTOR_VL_PORT        GPIOB
 #define MOTOR_VL_PIN         GPIO_PIN_14

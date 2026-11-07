@@ -45,7 +45,7 @@ static void MotorOutputGPIO_Init(void)
     /*
      * 先写输出寄存器，再切换为输出模式。
      * PA3：CTRL_SD
-     * PA5：U 相下桥臂
+     * PA8：U 相下桥臂
      */
     HAL_GPIO_WritePin(MOTOR_ENABLE_PORT,
                       MOTOR_ENABLE_PIN | MOTOR_UL_PIN,
