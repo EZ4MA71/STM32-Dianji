@@ -413,6 +413,11 @@
               <FileType>1</FileType>
               <FilePath>..\Core\Src\foc_pwm.c</FilePath>
             </File>
+            <File>
+              <FileName>foc_encoder.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\foc_encoder.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

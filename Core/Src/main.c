@@ -1,6 +1,7 @@
 #include "main.h"
 #include "debug_uart.h"
 #include "foc_pwm.h"
+#include "foc_encoder.h"
 #include <stdio.h>
 
 #define LED1_GPIO_PORT GPIOE
@@ -21,6 +22,7 @@ int main(void)
     SystemClock_Config();
     /* 配置 TIM8 和六路输出，开机时驱动板保持关断。 */
     FocPwm_Init();
+    FocEncoder_Init();
     LED1_Init();
     DebugUART_Init();
 
