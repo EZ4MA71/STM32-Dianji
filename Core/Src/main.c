@@ -1,5 +1,6 @@
 #include "main.h"
 #include "debug_uart.h"
+#include "foc_pwm.h"
 #include <stdio.h>
 
 #define LED1_GPIO_PORT GPIOE
@@ -18,6 +19,8 @@ int main(void)
     /* 初始化 HAL、400 MHz 系统时钟、板载 LED 和调试串口。 */
     HAL_Init();
     SystemClock_Config();
+    /* 配置 TIM8 和六路输出，开机时驱动板保持关断。 */
+    FocPwm_Init();
     LED1_Init();
     DebugUART_Init();
 

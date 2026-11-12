@@ -10,3 +10,4 @@ MDK-ARM/*.lst
 *.dep
 *.d
 __pycache__/
+/MDK-ARM/EventRecorderStub.scvd
