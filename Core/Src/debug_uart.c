@@ -4,13 +4,13 @@
 #define RX_BUFFER_SIZE 512U
 
 UART_HandleTypeDef huart1;
-volatile uint32_t debug_uart_rx_dropped;
-volatile uint32_t debug_uart_rx_errors;
+volatile uint32_t debugUartRxDropped;
+volatile uint32_t debugUartRxErrors;
 
-static uint8_t rx_byte;
-static uint8_t rx_buffer[RX_BUFFER_SIZE];
-static volatile uint32_t rx_head;
-static volatile uint32_t rx_tail;
+static uint8_t rxByte;
+static uint8_t rxBuffer[RX_BUFFER_SIZE];
+static volatile uint32_t rxHead;
+static volatile uint32_t rxTail;
 
 void DebugUART_Init(void)
 {
@@ -34,7 +34,7 @@ void DebugUART_Init(void)
     {
         Error_Handler();
     }
-    if (HAL_UART_Receive_IT(&huart1, &rx_byte, 1U) != HAL_OK)
+    if (HAL_UART_Receive_IT(&huart1, &rxByte, 1U) != HAL_OK)
     {
         Error_Handler();
     }
@@ -48,16 +48,16 @@ HAL_StatusTypeDef DebugUART_Write(const uint8_t *data, uint16_t size)
 
 int DebugUART_ReadByte(uint8_t *byte)
 {
-    const uint32_t tail = rx_tail;
-    if (tail == rx_head)
+    const uint32_t tail = rxTail;
+    if (tail == rxHead)
     {
         return 0;
     }
 
     __DMB();
-    *byte = rx_buffer[tail];
+    *byte = rxBuffer[tail];
     __DMB();
-    rx_tail = (tail + 1U) % RX_BUFFER_SIZE;
+    rxTail = (tail + 1U) % RX_BUFFER_SIZE;
     return 1;
 }
 
@@ -65,20 +65,20 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *uart)
 {
     if (uart->Instance == USART1)
     {
-        const uint32_t head = rx_head;
+        const uint32_t head = rxHead;
         const uint32_t next = (head + 1U) % RX_BUFFER_SIZE;
-        if (next != rx_tail)
+        if (next != rxTail)
         {
-            rx_buffer[head] = rx_byte;
+            rxBuffer[head] = rxByte;
             __DMB();
-            rx_head = next;
+            rxHead = next;
         }
         else
         {
-            ++debug_uart_rx_dropped;
+            ++debugUartRxDropped;
         }
 
-        if (HAL_UART_Receive_IT(uart, &rx_byte, 1U) != HAL_OK)
+        if (HAL_UART_Receive_IT(uart, &rxByte, 1U) != HAL_OK)
         {
             Error_Handler();
         }
@@ -89,11 +89,11 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *uart)
 {
     if (uart->Instance == USART1)
     {
-        ++debug_uart_rx_errors;
+        ++debugUartRxErrors;
         /* Overrun ends reception; framing/noise errors may leave it running. */
         if (uart->RxState == HAL_UART_STATE_READY)
         {
-            if (HAL_UART_Receive_IT(uart, &rx_byte, 1U) != HAL_OK)
+            if (HAL_UART_Receive_IT(uart, &rxByte, 1U) != HAL_OK)
             {
                 Error_Handler();
             }

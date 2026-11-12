@@ -6,7 +6,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$projectFile = Join-Path $projectRoot 'MDK-ARM\dianji1.uvprojx'
+$projectFile = Join-Path $projectRoot 'MDK-ARM\foc.uvprojx'
 $outputDirectory = Join-Path $projectRoot 'MDK-ARM\Objects'
 $logFile = Join-Path $outputDirectory 'build.log'
 
@@ -31,14 +31,14 @@ if (Test-Path -LiteralPath $logFile) {
     Remove-Item -LiteralPath $logFile
 }
 $buildOption = if ($Rebuild) { '-r' } else { '-b' }
-$arguments = @($buildOption, ('"' + $projectFile + '"'), '-t', '"STM32H743VIT6_UART"', '-j0', '-o', ('"' + $logFile + '"'))
+$arguments = @($buildOption, ('"' + $projectFile + '"'), '-t', '"STM32H743VIT6_FOC"', '-j0', '-o', ('"' + $logFile + '"'))
 $process = Start-Process -FilePath $UV4Path -ArgumentList $arguments -WorkingDirectory (Join-Path $projectRoot 'MDK-ARM') -WindowStyle Hidden -Wait -PassThru
 
 $logText = if (Test-Path -LiteralPath $logFile) { Get-Content -LiteralPath $logFile -Raw } else { '' }
 Write-Output $logText
 # uVision: 0 = success, 1 = warnings, 2+ = errors. A fresh log must confirm success.
 if ($process.ExitCode -gt 1 -or $logText -notmatch '0 Error\(s\)' -or
-    -not (Test-Path -LiteralPath (Join-Path $outputDirectory 'dianji1.axf')) -or
-    -not (Test-Path -LiteralPath (Join-Path $outputDirectory 'dianji1.hex'))) {
+    -not (Test-Path -LiteralPath (Join-Path $outputDirectory 'foc.axf')) -or
+    -not (Test-Path -LiteralPath (Join-Path $outputDirectory 'foc.hex'))) {
     throw "Keil build failed (exit code $($process.ExitCode)). See $logFile"
 }

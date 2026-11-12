@@ -1,7 +1,9 @@
-# STM32H743VIT6 串口基础工程
+# STM32H743VIT6 FOC 基础工程
 
 手动搭建的 Keil MDK 工程，使用 VS Code 编辑，**不使用 CubeMX，没有 `.ioc` 文件**。
 目前配置 USART1、系统时钟、SysTick 和板载 LED1；不初始化电机、霍尔或其他外设引脚。
+
+原理图位于项目根目录。开发板原理图为 SCH_STM32H743VIT6 IOT.pdf，驱动板原理图为 ATK-PD6010B_V1.0.pdf。
 
 ## 工程配置
 
@@ -26,7 +28,7 @@
 
 ## 在 Keil 中编译和下载
 
-1. 打开 `MDK-ARM/dianji1.uvprojx`，选择目标 `STM32H743VIT6_UART`。
+1. 打开 `MDK-ARM/foc.uvprojx`，选择目标 `STM32H743VIT6_FOC`。
 2. 点击 Build（F7），输出位于 `MDK-ARM/Objects/`。
 3. 工程默认使用 ST-Link。按你的下载器，在 Options for Target → Debug 中选择 ST-Link、J-Link 或 CMSIS-DAP，并使用 SWD。
 4. 下载器连接板上 SWDIO=PA13、SWCLK=PA14、GND，以及下载器要求的参考电压；板子正常供电。
@@ -34,8 +36,8 @@
 
 生成的文件：
 
-- `MDK-ARM/Objects/dianji1.axf`：带调试信息的可执行文件。
-- `MDK-ARM/Objects/dianji1.hex`：烧录固件。
+- `MDK-ARM/Objects/foc.axf`：带调试信息的可执行文件。
+- `MDK-ARM/Objects/foc.hex`：烧录固件。
 - `MDK-ARM/Objects/build.log`：命令行编译日志。
 
 ## 在 VS Code 中开发
@@ -75,7 +77,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\build.ps1 -Rebui
 3. 打开串口后按板上复位键，应看到：
 
 ```text
-STM32H743VIT6 UART ready
+STM32H743VIT6 FOC UART ready
 SYSCLK=400000000 Hz, HCLK=200000000 Hz, PCLK2=100000000 Hz
 USART1: PA9=TX, PA10=RX, 115200 8N1
 Type text to echo. Motor GPIOs are not initialized.
@@ -99,10 +101,5 @@ Type text to echo. Motor GPIOs are not initialized.
 - `Core/Inc/stm32h7xx_hal_conf.h`：HAL 模块和晶振频率配置。
 - `Startup/startup_stm32h743xx.s`：官方启动文件，栈大小调整为 4 KB。
 - `MDK-ARM/STM32H743VIT6.sct`：Flash / DTCM 内存布局。
-
-## 验证状态
-
-已使用本机 Keil MDK 5.36 / Arm Compiler 6.16 完整编译，0 错误、0 警告，并生成 AXF 和 HEX。
-固件未自动下载到开发板；LED 闪烁、串口接线及实际收发仍需上板验证。
 
 第三方源码及许可见 `THIRD_PARTY.md`。

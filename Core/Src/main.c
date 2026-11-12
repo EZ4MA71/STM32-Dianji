@@ -11,28 +11,29 @@ static void LED1_Init(void);
 
 int main(void)
 {
-    uint32_t last_heartbeat;
-    uint32_t last_led_toggle;
+    uint32_t lastHeartbeat;
+    uint32_t lastLedToggle;
     uint8_t received;
 
+    /* 初始化 HAL、400 MHz 系统时钟、板载 LED 和调试串口。 */
     HAL_Init();
     SystemClock_Config();
     LED1_Init();
     DebugUART_Init();
 
-    printf("\r\nSTM32H743VIT6 UART ready\r\n");
+    printf("\r\nSTM32H743VIT6 FOC UART ready\r\n");
     printf("SYSCLK=%lu Hz, HCLK=%lu Hz, PCLK2=%lu Hz\r\n",
            (unsigned long)HAL_RCC_GetSysClockFreq(),
            (unsigned long)HAL_RCC_GetHCLKFreq(),
            (unsigned long)HAL_RCC_GetPCLK2Freq());
     printf("USART1: PA9=TX, PA10=RX, 115200 8N1\r\n");
     printf("Type text to echo. Motor GPIOs are not initialized.\r\n");
-    last_heartbeat = HAL_GetTick();
-    last_led_toggle = last_heartbeat;
+    lastHeartbeat = HAL_GetTick();
+    lastLedToggle = lastHeartbeat;
 
     while (1)
     {
-        /* Receive in IRQ context, echo in the foreground. */
+        /* USART1 中断接收，主循环取出字节并回显。 */
         if (DebugUART_ReadByte(&received))
         {
             if (DebugUART_Write(&received, 1U) != HAL_OK)
@@ -41,19 +42,21 @@ int main(void)
             }
         }
 
-        if ((uint32_t)(HAL_GetTick() - last_led_toggle) >= LED1_TOGGLE_INTERVAL_MS)
+        /* 每 500 ms 翻转一次 LED，避免阻塞串口处理。 */
+        if ((uint32_t)(HAL_GetTick() - lastLedToggle) >= LED1_TOGGLE_INTERVAL_MS)
         {
-            last_led_toggle = HAL_GetTick();
+            lastLedToggle = HAL_GetTick();
             HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_GPIO_PIN);
         }
 
-        if ((uint32_t)(HAL_GetTick() - last_heartbeat) >= 1000U)
+        /* 每秒输出心跳和接收错误计数。 */
+        if ((uint32_t)(HAL_GetTick() - lastHeartbeat) >= 1000U)
         {
-            last_heartbeat = HAL_GetTick();
+            lastHeartbeat = HAL_GetTick();
             printf("\r\n[alive] tick=%lu ms, rx_errors=%lu, rx_dropped=%lu\r\n",
-                   (unsigned long)last_heartbeat,
-                   (unsigned long)debug_uart_rx_errors,
-                   (unsigned long)debug_uart_rx_dropped);
+                   (unsigned long)lastHeartbeat,
+                   (unsigned long)debugUartRxErrors,
+                   (unsigned long)debugUartRxDropped);
         }
     }
 }

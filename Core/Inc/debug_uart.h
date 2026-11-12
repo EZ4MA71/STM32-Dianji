@@ -7,8 +7,8 @@
 #define DEBUG_UART_BAUDRATE 115200U
 
 extern UART_HandleTypeDef huart1;
-extern volatile uint32_t debug_uart_rx_dropped;
-extern volatile uint32_t debug_uart_rx_errors;
+extern volatile uint32_t debugUartRxDropped;
+extern volatile uint32_t debugUartRxErrors;
 
 void DebugUART_Init(void);
 HAL_StatusTypeDef DebugUART_Write(const uint8_t *data, uint16_t size);
