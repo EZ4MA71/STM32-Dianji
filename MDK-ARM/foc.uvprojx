@@ -428,6 +428,11 @@
               <FileType>1</FileType>
               <FilePath>..\Core\Src\foc_clarke.c</FilePath>
             </File>
+            <File>
+              <FileName>foc_park.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\foc_park.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
