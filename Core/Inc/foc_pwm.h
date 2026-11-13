@@ -12,6 +12,27 @@
 #define FOC_PWM_PERIOD_TICKS    \
     (FOC_PWM_TIMER_CLOCK_HZ / (2U * (FOC_PWM_PRESCALER + 1U) * FOC_PWM_FREQ_HZ))
 
+/* TIM8 的六路互补输出和驱动使能接线。AF3 是这些引脚的 TIM8 复用功能。 */
+#define FOC_PWM_TIMER             TIM8
+#define FOC_PWM_AF                GPIO_AF3_TIM8
+#define FOC_PWM_HIGH_PORT         GPIOC
+#define FOC_PWM_UH_PIN            GPIO_PIN_6
+#define FOC_PWM_VH_PIN            GPIO_PIN_7
+#define FOC_PWM_WH_PIN            GPIO_PIN_8
+#define FOC_PWM_UL_PORT           GPIOA
+#define FOC_PWM_UL_PIN            GPIO_PIN_5
+#define FOC_PWM_VW_LOW_PORT       GPIOB
+#define FOC_PWM_VL_PIN            GPIO_PIN_14
+#define FOC_PWM_WL_PIN            GPIO_PIN_15
+#define FOC_DRIVE_ENABLE_PORT     GPIOA
+#define FOC_DRIVE_ENABLE_PIN      GPIO_PIN_3
+
+/* DIV1 下 100 个死区计数约为 0.5 us。 */
+#define FOC_PWM_DEAD_TIME_TICKS   100U
+
+/* TIM8 为 200 MHz，上数到 9900 约需 49.5 us。首轮用于关断功率级时验证触发。 */
+#define FOC_PWM_ADC_TRIGGER_TICKS 9900U
+
 typedef struct
 {
     uint16_t uTicks;
@@ -19,8 +40,11 @@ typedef struct
     uint16_t wTicks;
 } FocPwmDuty;
 
-/* 系统时钟初始化完成后调用一次。启动计数器，功率级保持关断。 */
+/* 系统时钟初始化完成后配置 TIM8。计数器和功率输出保持关闭。 */
 void FocPwm_Init(void);
+
+/* 在三台 ADC 都已进入等待触发状态后，启动 TIM8 计数。 */
+void FocPwm_StartCounter(void);
 
 /* 提交一组三相比较值。范围为 0 到 ARR，越界时整组拒绝。 */
 bool FocPwm_SetDutyTicks(FocPwmDuty duty);

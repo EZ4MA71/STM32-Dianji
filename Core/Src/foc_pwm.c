@@ -1,25 +1,6 @@
 #include "main.h"
 #include "foc_pwm.h"
 
-#define FOC_PWM_TIMER            TIM8
-#define FOC_PWM_AF               GPIO_AF3_TIM8
-#define FOC_PWM_DEAD_TIME_TICKS  100U
-
-#define FOC_PWM_HIGH_PORT        GPIOC
-#define FOC_PWM_UH_PIN           GPIO_PIN_6
-#define FOC_PWM_VH_PIN           GPIO_PIN_7
-#define FOC_PWM_WH_PIN           GPIO_PIN_8
-
-#define FOC_PWM_UL_PORT          GPIOA
-#define FOC_PWM_UL_PIN           GPIO_PIN_5
-
-#define FOC_PWM_VW_LOW_PORT      GPIOB
-#define FOC_PWM_VL_PIN           GPIO_PIN_14
-#define FOC_PWM_WL_PIN           GPIO_PIN_15
-
-#define FOC_DRIVE_ENABLE_PORT    GPIOA
-#define FOC_DRIVE_ENABLE_PIN     GPIO_PIN_3
-
 static TIM_HandleTypeDef pwmTimer;
 
 void FocPwm_DisableOutputs(void)
@@ -35,6 +16,7 @@ void FocPwm_Init(void)
     GPIO_InitTypeDef gpio = {0};
     TIM_OC_InitTypeDef oc = {0};
     TIM_BreakDeadTimeConfigTypeDef bd = {0};
+    TIM_MasterConfigTypeDef master = {0};
     static const uint32_t channels[] = {
         TIM_CHANNEL_1, TIM_CHANNEL_2, TIM_CHANNEL_3
     };
@@ -113,14 +95,41 @@ void FocPwm_Init(void)
 
     /*
      * 6. 准备三对通道，保持 MOE 为 0。
-     * 在启动计数前用 UG 装载初始比较值，然后只启动计数器。
+     * 用 UG 装载初始比较值。等 ADC 准备好后再启动计数器。
      */
     FocPwm_DisableOutputs();
     SET_BIT(FOC_PWM_TIMER->CCER, TIM_CCER_CC1E | TIM_CCER_CC1NE |
                                 TIM_CCER_CC2E | TIM_CCER_CC2NE |
                                 TIM_CCER_CC3E | TIM_CCER_CC3NE);
+
+    /* CH4 只使用内部 OC4REF。沿用前面已设置的极性、空闲状态和快速模式。 */
+    /* PWM2 上数到 CCR4 时产生上升沿。PWM1 的边沿方向相反。 */
+    oc.OCMode = TIM_OCMODE_PWM2;
+    /* Pulse 写入 CCR4。增大它会把上数时的触发点往 ARR 移。 */
+    oc.Pulse = FOC_PWM_ADC_TRIGGER_TICKS;
+    if (HAL_TIM_PWM_ConfigChannel(&pwmTimer, &oc, TIM_CHANNEL_4) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    /* 普通 TRGO 保持 RESET 档。该档选择 UG，ADC 本次使用的是 TRGO2。 */
+    master.MasterOutputTrigger = TIM_TRGO_RESET;
+    /* TRGO2 跟随 OC4REF。选 UPDATE 则由更新事件决定触发时刻。 */
+    master.MasterOutputTrigger2 = TIM_TRGO2_OC4REF;
+    /* TIM8 自己计数。ENABLE 用于有主从定时器同步需求的场合。 */
+    master.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(&pwmTimer, &master) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
     FOC_PWM_TIMER->EGR = TIM_EGR_UG;
     __HAL_TIM_CLEAR_FLAG(&pwmTimer, TIM_FLAG_UPDATE);
+}
+
+void FocPwm_StartCounter(void)
+{
+    /* 置 CEN 启动计数和内部 TRGO2，六路功率输出仍由 MOE 单独控制。 */
     __HAL_TIM_ENABLE(&pwmTimer);
 }
 

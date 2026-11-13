@@ -1,6 +1,7 @@
 #include "main.h"
 #include "debug_uart.h"
 #include "foc_pwm.h"
+#include "foc_adc.h"
 #include "foc_encoder.h"
 #include <stdio.h>
 
@@ -20,8 +21,10 @@ int main(void)
     /* 初始化 HAL、400 MHz 系统时钟、板载 LED 和调试串口。 */
     HAL_Init();
     SystemClock_Config();
-    /* 配置 TIM8 和六路输出，开机时驱动板保持关断。 */
+    /* 先配置 TIM8 并关断功率级，再让 ADC 就绪，最后启动计数和采样触发。 */
     FocPwm_Init();
+    FocAdc_Init();
+    FocPwm_StartCounter();
     FocEncoder_Init();
     LED1_Init();
     DebugUART_Init();
@@ -32,7 +35,7 @@ int main(void)
            (unsigned long)HAL_RCC_GetHCLKFreq(),
            (unsigned long)HAL_RCC_GetPCLK2Freq());
     printf("USART1: PA9=TX, PA10=RX, 115200 8N1\r\n");
-    printf("Type text to echo. Motor GPIOs are not initialized.\r\n");
+    printf("Type text to echo. Motor drive disabled.\r\n");
     lastHeartbeat = HAL_GetTick();
     lastLedToggle = lastHeartbeat;
 
