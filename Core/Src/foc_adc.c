@@ -20,7 +20,8 @@ typedef struct
 {
     uint16_t pending[FOC_ADC_PHASE_COUNT]; /* 正在收集的三路结果。 */
     uint32_t readyMask;                  /* 每到一路，就置对应的位。 */
-    volatile FocAdcCurrentFrame latest;   /* 三路收齐后发布的快照。 */
+    volatile FocAdcCurrentFrame latest;   /* 三路收齐后发布的原始码。 */
+    volatile FocAdcPhaseCurrents latestAmps; /* 同一帧扣除零偏后的三相安培值。 */
     volatile bool hasFrame;              /* 第一次收齐三相后置位。 */
     volatile bool fault;                 /* ADC 报错或收帧异常，复位前保持。 */
 } FocAdcState;
@@ -257,6 +258,15 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
         adcState.latest.vRaw = adcState.pending[FOC_ADC_PHASE_V];
         adcState.latest.wRaw = adcState.pending[FOC_ADC_PHASE_W];
         ++adcState.latest.sequence;
+
+        /* 先做有符号减法，再按 ADC 参考、分流电阻和增益换算成安培。 */
+        const int32_t uCounts = (int32_t)adcState.pending[FOC_ADC_PHASE_U] - (int32_t)FOC_ADC_ZERO_U_RAW;
+        const int32_t vCounts = (int32_t)adcState.pending[FOC_ADC_PHASE_V] - (int32_t)FOC_ADC_ZERO_V_RAW;
+        const int32_t wCounts = (int32_t)adcState.pending[FOC_ADC_PHASE_W] - (int32_t)FOC_ADC_ZERO_W_RAW;
+        adcState.latestAmps.uAmps = (float)uCounts * FOC_ADC_AMPS_PER_COUNT;
+        adcState.latestAmps.vAmps = (float)vCounts * FOC_ADC_AMPS_PER_COUNT;
+        adcState.latestAmps.wAmps = (float)wCounts * FOC_ADC_AMPS_PER_COUNT;
+        adcState.latestAmps.sequence = adcState.latest.sequence;
         adcState.hasFrame = true;
         adcState.readyMask = 0U;
     }
@@ -291,6 +301,27 @@ bool FocAdc_ReadCurrents(FocAdcCurrentFrame *frame)
     }
 
     /* 恢复调用前的中断屏蔽状态。 */
+    __set_PRIMASK(irqMask);
+    return valid;
+}
+
+bool FocAdc_ReadPhaseCurrents(FocAdcPhaseCurrents *currents)
+{
+    if (currents == NULL)
+    {
+        return false;
+    }
+
+    /* 复制安培值和帧序号期间屏蔽中断，避免读取到正在更新的帧。 */
+    const uint32_t irqMask = __get_PRIMASK();
+    __disable_irq();
+
+    const bool valid = adcState.hasFrame && !adcState.fault;
+    if (valid)
+    {
+        *currents = adcState.latestAmps;
+    }
+
     __set_PRIMASK(irqMask);
     return valid;
 }

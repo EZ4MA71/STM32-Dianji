@@ -35,6 +35,20 @@
 #define FOC_ADC_ZERO_V_RAW           1580U
 #define FOC_ADC_ZERO_W_RAW           1597U
 
+/* 按主板 3.3 V 标称参考电压、12 位 ADC 和驱动板原理图计算。 */
+#define FOC_ADC_REFERENCE_VOLTS      3.3f
+#define FOC_ADC_CODE_COUNT           4096U
+#define FOC_ADC_SHUNT_OHMS           0.020f
+#define FOC_ADC_CURRENT_GAIN         6.0f
+
+/*
+ * 从逆变器流向电机为正。低侧采样时，电流从下管经分流电阻流向 GND
+ * 会抬高 ADC 读数，但该方向对应负相电流，所以换算系数取负。
+ * 分流电阻按 R17/R57/R86 的 20 mΩ 元件标注取值，比例和方向待实板核对。
+ */
+#define FOC_ADC_AMPS_PER_COUNT       \
+    (-FOC_ADC_REFERENCE_VOLTS / (FOC_ADC_CODE_COUNT * FOC_ADC_SHUNT_OHMS * FOC_ADC_CURRENT_GAIN))
+
 typedef struct
 {
     uint16_t uRaw;       /* ADC1 的 U 相原始值。 */
@@ -43,6 +57,14 @@ typedef struct
     uint32_t sequence;  /* 每收齐一组三相数据加 1。 */
 } FocAdcCurrentFrame;
 
+typedef struct
+{
+    float uAmps;
+    float vAmps;
+    float wAmps;
+    uint32_t sequence;  /* 与对应原始帧的序号相同。 */
+} FocAdcPhaseCurrents;
+
 /* 在 TIM8 开始产生采样触发前调用。 */
 void FocAdc_Init(void);
 
@@ -50,5 +72,10 @@ void FocAdc_Init(void);
  * frame 为空、首帧未就绪或采样故障时返回 false，不修改调用方的数据。
  */
 bool FocAdc_ReadCurrents(FocAdcCurrentFrame *frame);
+
+/* 读取同一帧的三相安培值。无有效帧或参数为空时返回 false。
+ * 运行时调用方需确认采样点位于三相低侧导通的有效窗口内。
+ */
+bool FocAdc_ReadPhaseCurrents(FocAdcPhaseCurrents *currents);
 
 #endif
