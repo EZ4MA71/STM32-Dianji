@@ -30,6 +30,11 @@
 /* NVIC 抢占优先级为 5，数值越小越优先。两条 ADC 中断使用相同优先级。 */
 #define FOC_ADC_IRQ_PRIORITY         5U
 
+/* 功率级关断、零电流时对 256 帧求均值，单位为 12 位 ADC 原始码。 */
+#define FOC_ADC_ZERO_U_RAW           1575U
+#define FOC_ADC_ZERO_V_RAW           1580U
+#define FOC_ADC_ZERO_W_RAW           1597U
+
 typedef struct
 {
     uint16_t uRaw;       /* ADC1 的 U 相原始值。 */
